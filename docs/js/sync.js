@@ -12,11 +12,7 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
-
-let currentSyncCode = null;
 let isSyncing = false;
-
-// ... (Your Firebase Config at the top)
 
 function updateSyncUI(status, code = null) {
     const dot = document.getElementById('sync-status-dot');
@@ -27,8 +23,9 @@ function updateSyncUI(status, code = null) {
     const hText = document.getElementById('header-code-text');
 
     dot.className = 'dot ' + status;
+    
     if(code) {
-        state.syncCode = code;
+        state.syncCode = code; // Sync state
         disc.classList.add('hidden');
         conn.classList.remove('hidden');
         hDisplay.classList.remove('hidden');
@@ -65,7 +62,7 @@ function joinSync() {
             mergeData(snap.val());
             window.setSyncCodeUI(code);
             saveLocal();
-        } else alert("Room not found");
+        } else alert("Wallet not found");
     });
 }
 
