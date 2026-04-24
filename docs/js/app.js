@@ -139,14 +139,24 @@ function render() {
     });
 
     let remainingTotal = state.totalBudget;
-    let weekBudgets = [0,0,0,0];
+    let weekBudgets = [0, 0, 0, 0];
+    let weeksLeft = 4;
     
-    // Strict requirement: Reduce future weeks ONLY if a week exceeds.
-    // Calculate evenly based on remaining budget divided by remaining weeks.
+    // CORRECTED MATH: Only reduce future weeks if a week overspends.
     for (let i = 0; i < 4; i++) {
-        let weeksLeft = 4 - i;
-        weekBudgets[i] = remainingTotal / weeksLeft; 
-        remainingTotal -= weekSpends[i]; // Subtract actual spent from running total
+        let baseForWeek = remainingTotal / weeksLeft;
+        weekBudgets[i] = baseForWeek;
+        
+        let wSpent = weekSpends[i];
+        
+        if (wSpent > baseForWeek) {
+            // Overspent: Deduct exactly what was spent to reduce future pools
+            remainingTotal -= wSpent; 
+        } else {
+            // Under/On budget: Deduct the standard base so future weeks stay at €250
+            remainingTotal -= baseForWeek; 
+        }
+        weeksLeft--;
     }
 
     document.getElementById('dash-total').innerText = `€${state.totalBudget.toFixed(2)}`;
@@ -163,7 +173,6 @@ function render() {
         const wRemaining = wBudget - wSpent;
         const isOver = wRemaining < 0;
         
-        // Check local storage for collapsed state of this week
         const weekId = `card-week-${i}`;
         const isCollapsed = state.collapsed[weekId] ? 'collapsed' : '';
 
