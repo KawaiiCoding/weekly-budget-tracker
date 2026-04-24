@@ -2,6 +2,7 @@ let state = {
     startDate: new Date().toISOString().split('T')[0],
     totalBudget: 1000,
     spendings: [],
+    history: [], // Stores archived months
     syncCode: null,
     theme: 'auto',
     collapsed: {}
@@ -15,6 +16,49 @@ function init() {
     if(state.syncCode && window.setSyncCodeUI) {
         window.setSyncCodeUI(state.syncCode);
     }
+    render();
+}
+
+// --- MODAL HELPERS ---
+function openModal(id) { 
+    document.getElementById(id).classList.remove('hidden'); 
+    if(id === 'history-modal') renderHistory(); 
+}
+
+function closeModal(id) { 
+    document.getElementById(id).classList.add('hidden'); 
+}
+
+// --- ARCHIVE LOGIC ---
+function confirmNewMonth() {
+    const totalSpent = state.spendings.reduce((a, b) => a + b.amount, 0);
+    const saved = state.totalBudget - totalSpent;
+
+    // 1. Create Archive Entry
+    const archiveEntry = {
+        id: crypto.randomUUID(),
+        startDate: state.startDate,
+        totalBudget: state.totalBudget,
+        totalSpent: totalSpent,
+        saved: saved,
+        spendings: [...state.spendings]
+    };
+
+    // 2. Update State
+    state.history.unshift(archiveEntry); // Add to top of history
+    state.spendings = [];
+    
+    // Move Start Date forward by 28 days (4 weeks)
+    let d = new Date(state.startDate);
+    d.setDate(d.getDate() + 28);
+    state.startDate = d.toISOString().split('T')[0];
+    
+    // Update the settings input field visually
+    const dateInput = document.getElementById('start-date');
+    if(dateInput) dateInput.value = state.startDate;
+
+    closeModal('new-month-modal');
+    saveLocal();
     render();
 }
 
@@ -92,7 +136,6 @@ function render() {
         const range = getWeekRange(state.startDate, i);
         const isCurrentWeek = (todayStr >= range.min && todayStr <= range.max);
         
-        // Auto-expand current week, others respect saved collapse state
         const isCollapsed = isCurrentWeek ? '' : (state.collapsed[`week-${i}`] ? 'collapsed' : '');
         const wRem = weekBudgets[i] - weekSpends[i];
         
@@ -141,10 +184,72 @@ function render() {
         `;
     }
 
+    // Add Archive & History Trigger at the end of the container
+    container.innerHTML += `
+        <div style="display: flex; gap: 10px; margin-top: 20px; margin-bottom: 40px;">
+            <button class="btn btn-outline" style="flex: 1;" onclick="openModal('history-modal')">
+                <i data-lucide="history" style="width: 14px; margin-right: 6px;"></i> History & Stats
+            </button>
+            <button class="btn btn-primary" style="flex: 1;" onclick="openModal('new-month-modal')">
+                <i data-lucide="calendar-plus" style="width: 14px; margin-right: 6px;"></i> Next Month
+            </button>
+        </div>
+    `;
+
     const totalSpent = weekSpends.reduce((a,b) => a+b, 0);
     document.getElementById('dash-total').innerText = `€${state.totalBudget.toFixed(2)}`;
     document.getElementById('dash-spent').innerText = `€${totalSpent.toFixed(2)}`;
     document.getElementById('dash-remaining').innerText = `€${(state.totalBudget - totalSpent).toFixed(2)}`;
+    lucide.createIcons();
+}
+
+function renderHistory() {
+    const list = document.getElementById('history-list');
+    const currentSpent = state.spendings.reduce((a, b) => a + b.amount, 0);
+    const currentSaved = state.totalBudget - currentSpent;
+
+    let html = `
+        <div class="mantine-card" style="border: 2px solid var(--primary); background: rgba(34, 139, 230, 0.05); margin-bottom: 20px;">
+            <small style="font-weight: 800; color: var(--primary)">CURRENT ACTIVE CYCLE</small>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <div>
+                    <h3 style="margin:0">${new Date(state.startDate).toLocaleDateString('default', {month:'long', year:'numeric'})}</h3>
+                    <p style="font-size: 12px; opacity: 0.6; margin:0">Spent so far: €${currentSpent.toFixed(2)}</p>
+                </div>
+                <div style="text-align: right">
+                    <span style="font-size: 18px; font-weight: 900; color: var(--success)">€${currentSaved.toFixed(2)}</span>
+                    <p style="font-size: 10px; opacity: 0.5; margin:0">LEFT</p>
+                </div>
+            </div>
+        </div>
+        <h3 style="font-size: 12px; opacity: 0.4; text-transform: uppercase; margin: 20px 0 10px 0;">Past Months Archive</h3>
+    `;
+
+    if (state.history.length === 0) {
+        html += `<p style="text-align:center; opacity:0.5; padding: 20px;">No archived months yet.</p>`;
+    }
+
+    state.history.forEach(item => {
+        const dateObj = new Date(item.startDate);
+        const monthName = dateObj.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+        
+        html += `
+            <div class="spending-item" style="padding: 15px 0; border-bottom: 1px solid var(--border);">
+                <div>
+                    <strong style="font-size: 15px;">${monthName}</strong>
+                    <div style="font-size: 12px; opacity: 0.6;">Budget: €${item.totalBudget.toFixed(2)} | Spent: €${item.totalSpent.toFixed(2)}</div>
+                </div>
+                <div style="text-align: right">
+                    <div style="font-weight: 800; color: ${item.saved >= 0 ? 'var(--success)' : 'var(--warning)'}">
+                        ${item.saved >= 0 ? '+' : ''}€${item.saved.toFixed(2)}
+                    </div>
+                    <small style="font-size: 9px; opacity: 0.5;">SAVED</small>
+                </div>
+            </div>
+        `;
+    });
+
+    list.innerHTML = html;
     lucide.createIcons();
 }
 
@@ -183,7 +288,6 @@ function applyTheme() {
     lucide.createIcons();
 }
 
-// PWA Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW failed", err));
