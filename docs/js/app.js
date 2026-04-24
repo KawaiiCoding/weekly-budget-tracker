@@ -5,7 +5,7 @@ let state = {
     history: [], // Stores archived months
     syncCode: null,
     theme: 'auto',
-    persona: 'dude', // NEW: 'dude' or 'girl'
+    persona: 'dude', // 'dude' or 'girl'
     collapsed: {}
 };
 
@@ -14,7 +14,7 @@ let itemToDelete = null;
 function init() {
     loadLocal();
     applyTheme();
-    applyPersona(); // Apply Dude/Girl style on startup
+    applyPersona(); 
     if(state.syncCode && window.setSyncCodeUI) {
         window.setSyncCodeUI(state.syncCode);
     }
@@ -25,21 +25,19 @@ function init() {
 function togglePersona() {
     state.persona = state.persona === 'dude' ? 'girl' : 'dude';
     applyPersona();
-    saveLocal(); // Saves to LocalStorage and Syncs
+    saveLocal(); 
 }
 
 function applyPersona() {
     const htmlEl = document.documentElement;
     htmlEl.setAttribute('data-style', state.persona);
     
-    // Dynamically change the mobile browser header color
     const themeColor = state.persona === 'girl' ? '#ff85a2' : '#228be6';
     let metaTheme = document.querySelector('meta[name="theme-color"]');
     if (metaTheme) {
         metaTheme.setAttribute('content', themeColor);
     }
 
-    // Update icons...
     const icon = document.getElementById('persona-icon');
     if (icon) {
         const iconName = state.persona === 'girl' ? 'sparkles' : 'user-round';
@@ -117,14 +115,12 @@ function loadLocal() {
         const parsed = JSON.parse(saved);
         state = { ...state, ...parsed };
     }
-    // Update UI elements to match loaded state
     document.getElementById('start-date').value = state.startDate;
     document.getElementById('total-budget').value = state.totalBudget;
 }
 
 function saveLocal() {
     localStorage.setItem('budgetTrackerState', JSON.stringify(state));
-    // If sync.js is loaded, push to Firebase
     if(window.appSyncData) window.appSyncData(state);
 }
 
@@ -203,9 +199,12 @@ function render() {
                     <div class="spending-list">
                         ${state.spendings.filter(s => s.weekIndex === i).sort((a,b) => b.timestamp - a.timestamp).map(s => `
                             <div class="spending-item">
-                                <span style="font-weight: 600;">€${s.amount.toFixed(2)} <small style="opacity:0.4; font-weight: 400; margin-left:6px">${s.date.split('-').reverse().join('.')}</small></span>
-                                <button class="btn-danger btn icon-btn" style="width:32px; height:32px;" onclick="promptDelete('${s.id}')">
-                                    <i data-lucide="trash-2" style="width:12px; height:12px;"></i>
+                                <span>
+                                    <strong>€${s.amount.toFixed(2)}</strong> 
+                                    <small style="opacity:0.4; margin-left:6px">${s.date.split('-').reverse().join('.')}</small>
+                                </span>
+                                <button class="btn-danger btn icon-btn" onclick="promptDelete('${s.id}')">
+                                    <i data-lucide="trash-2"></i>
                                 </button>
                             </div>
                         `).join('')}
@@ -215,7 +214,6 @@ function render() {
         `;
     }
 
-    // History & New Month Buttons
     container.innerHTML += `
         <div style="display: flex; gap: 10px; margin-top: 20px; margin-bottom: 40px;">
             <button class="btn btn-outline" style="flex: 1;" onclick="openModal('history-modal')">
@@ -259,10 +257,10 @@ function renderHistory() {
         const monthName = dateObj.toLocaleDateString('default', { month: 'long', year: 'numeric' });
         html += `
             <div class="spending-item" style="padding: 15px 0; border-bottom: 1px solid var(--border);">
-                <div>
+                <span>
                     <strong style="font-size: 15px;">${monthName}</strong>
                     <div style="font-size: 12px; opacity: 0.6;">Spent: €${item.totalSpent.toFixed(2)}</div>
-                </div>
+                </span>
                 <div style="text-align: right">
                     <div style="font-weight: 800; color: ${item.saved >= 0 ? 'var(--success)' : 'var(--warning)'}">
                         ${item.saved >= 0 ? '+' : ''}€${item.saved.toFixed(2)}
@@ -277,11 +275,32 @@ function renderHistory() {
 }
 
 function addSpending(idx) {
-    const amt = parsePrice(document.getElementById(`amt-${idx}`).value);
-    const date = document.getElementById(`date-${idx}`).value;
+    const amtInput = document.getElementById(`amt-${idx}`);
+    const dateInput = document.getElementById(`date-${idx}`);
+    
+    const amt = parsePrice(amtInput.value);
+    let date = dateInput.value;
+
     if(!amt) return;
-    state.spendings.push({ id: crypto.randomUUID(), amount: amt, date, weekIndex: idx, timestamp: Date.now() });
-    saveLocal(); render();
+
+    // Safety: Logic to ensure date fits the week range exactly
+    const minAllowed = dateInput.getAttribute('min');
+    const maxAllowed = dateInput.getAttribute('max');
+    
+    if (date < minAllowed) date = minAllowed;
+    if (date > maxAllowed) date = maxAllowed;
+
+    state.spendings.push({ 
+        id: crypto.randomUUID(), 
+        amount: amt, 
+        date: date, 
+        weekIndex: idx, 
+        timestamp: Date.now() 
+    });
+
+    amtInput.value = '';
+    saveLocal(); 
+    render();
 }
 
 function promptDelete(id) { 
