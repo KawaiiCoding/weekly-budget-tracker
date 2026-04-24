@@ -108,7 +108,7 @@ function render() {
                         <small style="font-size: 10px; opacity: 0.5; font-weight: 700;">(${range.text})</small>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px">
-                        <span style="font-size:20px; font-weight:900; letter-spacing:-0.8px; color:${wRem < 0 ? 'var(--warning)' : 'var(--success)'}">
+                        <span style="font-size:18px; font-weight:700; letter-spacing:-0.8px; color:${wRem < 0 ? 'var(--warning)' : 'var(--success)'}">
                             €${wRem.toFixed(2)}
                         </span>
                         <i data-lucide="chevron-down" class="collapse-icon"></i>
