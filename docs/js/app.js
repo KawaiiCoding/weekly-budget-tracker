@@ -2,10 +2,10 @@ let state = {
     startDate: new Date().toISOString().split('T')[0],
     totalBudget: 1000,
     spendings: [],
-    history: [], // Stores archived months
+    history: [],
     syncCode: null,
     theme: 'auto',
-    persona: 'dude', // 'dude' or 'girl'
+    persona: 'dude',
     collapsed: {}
 };
 
@@ -21,7 +21,7 @@ function init() {
     render();
 }
 
-// --- PERSONA LOGIC (DUDE/GIRL) ---
+// --- PERSONA LOGIC ---
 function togglePersona() {
     state.persona = state.persona === 'dude' ? 'girl' : 'dude';
     applyPersona();
@@ -31,12 +31,9 @@ function togglePersona() {
 function applyPersona() {
     const htmlEl = document.documentElement;
     htmlEl.setAttribute('data-style', state.persona);
-    
     const themeColor = state.persona === 'girl' ? '#ff85a2' : '#228be6';
     let metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) {
-        metaTheme.setAttribute('content', themeColor);
-    }
+    if (metaTheme) metaTheme.setAttribute('content', themeColor);
 
     const icon = document.getElementById('persona-icon');
     if (icon) {
@@ -56,44 +53,81 @@ function closeModal(id) {
     document.getElementById(id).classList.add('hidden'); 
 }
 
-// --- ARCHIVE LOGIC ---
+function showError(msg) {
+    document.getElementById('error-message').innerText = msg;
+    openModal('error-modal');
+    lucide.createIcons();
+}
+
+// --- LOGIC ---
+function addSpending(idx) {
+    const amtInput = document.getElementById(`amt-${idx}`);
+    const dateInput = document.getElementById(`date-${idx}`);
+    const amt = parsePrice(amtInput.value);
+    const date = dateInput.value;
+
+    if(!amt) return;
+
+    const min = dateInput.getAttribute('min');
+    const max = dateInput.getAttribute('max');
+    
+    if (date < min || date > max) {
+        const dMin = min.split('-').reverse().join('.');
+        const dMax = max.split('-').reverse().join('.');
+        showError(`For Week ${idx + 1}, please pick a date between ${dMin} and ${dMax}.`);
+        return;
+    }
+
+    state.spendings.push({ 
+        id: crypto.randomUUID(), 
+        amount: amt, 
+        date, 
+        weekIndex: idx, 
+        timestamp: Date.now() 
+    });
+
+    amtInput.value = '';
+    saveLocal(); 
+    render();
+}
+
+function promptDelete(id) { 
+    itemToDelete = id; 
+    const s = state.spendings.find(x => x.id === id);
+    const msg = document.querySelector('#delete-modal p');
+    if (msg && s) {
+        msg.innerHTML = `Delete entry for <strong>€${s.amount.toFixed(2)}</strong>?<br><small style="opacity:0.6">This cannot be undone.</small>`;
+    }
+    openModal('delete-modal'); 
+}
+
 function confirmNewMonth() {
     const totalSpent = state.spendings.reduce((a, b) => a + b.amount, 0);
-    const saved = state.totalBudget - totalSpent;
-
-    const archiveEntry = {
+    state.history.unshift({
         id: crypto.randomUUID(),
         startDate: state.startDate,
         totalBudget: state.totalBudget,
         totalSpent: totalSpent,
-        saved: saved,
+        saved: state.totalBudget - totalSpent,
         spendings: [...state.spendings]
-    };
-
-    state.history.unshift(archiveEntry);
+    });
     state.spendings = [];
-    
     let d = new Date(state.startDate);
     d.setDate(d.getDate() + 28);
     state.startDate = d.toISOString().split('T')[0];
-    
-    const dateInput = document.getElementById('start-date');
-    if(dateInput) dateInput.value = state.startDate;
-
+    document.getElementById('start-date').value = state.startDate;
     closeModal('new-month-modal');
     saveLocal();
     render();
 }
 
-// HELPER: Week Ranges
+// --- HELPERS ---
 function getWeekRange(startStr, weekIdx) {
     let start = new Date(startStr);
     let firstDay = new Date(start);
     firstDay.setDate(start.getDate() + (weekIdx * 7));
-    
     let lastDay = new Date(firstDay);
     lastDay.setDate(firstDay.getDate() + 6);
-
     const format = (d) => d.getDate() + "/" + (d.getMonth() + 1);
     return {
         text: `${format(firstDay)} - ${format(lastDay)}`,
@@ -102,19 +136,13 @@ function getWeekRange(startStr, weekIdx) {
     };
 }
 
-function parsePrice(val) {
-    if (typeof val !== 'string') val = String(val);
-    const normalized = val.replace(',', '.');
-    return parseFloat(normalized) || 0;
+function parsePrice(v) {
+    return parseFloat(String(v).replace(',', '.')) || 0;
 }
 
-// --- STORAGE & SYNC ---
 function loadLocal() {
     const saved = localStorage.getItem('budgetTrackerState');
-    if (saved) {
-        const parsed = JSON.parse(saved);
-        state = { ...state, ...parsed };
-    }
+    if (saved) state = { ...state, ...JSON.parse(saved) };
     document.getElementById('start-date').value = state.startDate;
     document.getElementById('total-budget').value = state.totalBudget;
 }
@@ -127,43 +155,37 @@ function saveLocal() {
 function updateSettings() {
     state.startDate = document.getElementById('start-date').value;
     state.totalBudget = parsePrice(document.getElementById('total-budget').value);
-    state.spendings.forEach(s => s.weekIndex = calculateWeekIndex(s.date, state.startDate));
     saveLocal();
     render();
 }
 
-function calculateWeekIndex(spendStr, startStr) {
-    const start = new Date(startStr);
-    const spend = new Date(spendStr);
-    const diff = Math.floor((spend - start) / 86400000);
-    return Math.max(0, Math.min(Math.floor(diff / 7), 3));
+function toggleCollapse(id) {
+    document.getElementById(id).classList.toggle('collapsed');
+    state.collapsed[id] = document.getElementById(id).classList.contains('collapsed');
+    saveLocal();
 }
 
-// --- RENDER LOGIC ---
 function render() {
     let weekSpends = [0, 0, 0, 0];
     state.spendings.forEach(s => {
         if(s.weekIndex >= 0 && s.weekIndex <= 3) weekSpends[s.weekIndex] += s.amount;
     });
 
-    let remainingPool = state.totalBudget;
+    let pool = state.totalBudget;
     let weekBudgets = [0, 0, 0, 0];
     for (let i = 0; i < 4; i++) {
-        let weeksLeft = 4 - i;
-        let budgetThisWeek = remainingPool / weeksLeft;
-        weekBudgets[i] = budgetThisWeek;
-        if (weekSpends[i] > budgetThisWeek) remainingPool -= weekSpends[i];
-        else remainingPool -= budgetThisWeek;
+        weekBudgets[i] = pool / (4 - i);
+        pool -= (weekSpends[i] > weekBudgets[i]) ? weekSpends[i] : weekBudgets[i];
     }
 
-    const todayStr = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0];
     const container = document.getElementById('weeks-container');
     container.innerHTML = '';
     
     for (let i = 0; i < 4; i++) {
         const range = getWeekRange(state.startDate, i);
-        const isCurrentWeek = (todayStr >= range.min && todayStr <= range.max);
-        const isCollapsed = isCurrentWeek ? '' : (state.collapsed[`week-${i}`] ? 'collapsed' : '');
+        const isCurrent = (today >= range.min && today <= range.max);
+        const isCollapsed = isCurrent ? '' : (state.collapsed[`week-${i}`] ? 'collapsed' : '');
         const wRem = weekBudgets[i] - weekSpends[i];
         
         container.innerHTML += `
@@ -174,23 +196,23 @@ function render() {
                         <small style="font-size: 10px; opacity: 0.5; font-weight: 700;">(${range.text})</small>
                     </div>
                     <div style="display:flex; align-items:center; gap:10px">
-                        <span style="font-size:18px; font-weight:700; letter-spacing:-0.8px; color:${wRem < 0 ? 'var(--warning)' : 'var(--success)'}">
+                        <span style="font-size:18px; font-weight:700; color:${wRem < 0 ? 'var(--warning)' : 'var(--success)'}">
                             €${wRem.toFixed(2)}
                         </span>
                         <i data-lucide="chevron-down" class="collapse-icon"></i>
                     </div>
                 </div>
                 <div class="collapsible-content">
-                    <p style="font-size:10px; opacity:0.5; margin: 12px 0 6px 0; font-weight:800;">WEEKLY LIMIT: €${weekBudgets[i].toFixed(2)}</p>
+                    <p style="font-size:10px; opacity:0.5; margin: 12px 0 6px 0; font-weight:800;">LIMIT: €${weekBudgets[i].toFixed(2)}</p>
                     <div class="config-grid">
                         <div class="input-group">
                             <label>Amount</label>
-                            <input type="text" id="amt-${i}" placeholder="10,00" inputmode="decimal">
+                            <input type="text" id="amt-${i}" placeholder="0,00" inputmode="decimal">
                         </div>
                         <div class="input-group">
                             <label>Date</label>
                             <input type="date" id="date-${i}" 
-                                value="${isCurrentWeek ? todayStr : range.min}" 
+                                value="${isCurrent ? today : range.min}" 
                                 min="${range.min}" 
                                 max="${range.max}">
                         </div>
@@ -225,107 +247,16 @@ function render() {
         </div>
     `;
 
-    const totalSpent = weekSpends.reduce((a,b) => a+b, 0);
     document.getElementById('dash-total').innerText = `€${state.totalBudget.toFixed(2)}`;
-    document.getElementById('dash-spent').innerText = `€${totalSpent.toFixed(2)}`;
-    document.getElementById('dash-remaining').innerText = `€${(state.totalBudget - totalSpent).toFixed(2)}`;
+    document.getElementById('dash-spent').innerText = `€${(weekSpends.reduce((a,b)=>a+b,0)).toFixed(2)}`;
+    document.getElementById('dash-remaining').innerText = `€${(state.totalBudget - weekSpends.reduce((a,b)=>a+b,0)).toFixed(2)}`;
     lucide.createIcons();
 }
 
-function renderHistory() {
-    const list = document.getElementById('history-list');
-    const currentSpent = state.spendings.reduce((a, b) => a + b.amount, 0);
-    const currentSaved = state.totalBudget - currentSpent;
-
-    let html = `
-        <div class="mantine-card" style="border: 2px solid var(--primary); background: rgba(34, 139, 230, 0.05); margin-bottom: 20px;">
-            <small style="font-weight: 800; color: var(--primary)">CURRENT ACTIVE CYCLE</small>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                <div>
-                    <h3 style="margin:0">${new Date(state.startDate).toLocaleDateString('default', {month:'long', year:'numeric'})}</h3>
-                    <p style="font-size: 12px; opacity: 0.6; margin:0">Spent: €${currentSpent.toFixed(2)}</p>
-                </div>
-                <div style="text-align: right">
-                    <span style="font-size: 18px; font-weight: 700; color: var(--success)">€${currentSaved.toFixed(2)}</span>
-                </div>
-            </div>
-        </div>
-    `;
-
-    state.history.forEach(item => {
-        const dateObj = new Date(item.startDate);
-        const monthName = dateObj.toLocaleDateString('default', { month: 'long', year: 'numeric' });
-        html += `
-            <div class="spending-item" style="padding: 15px 0; border-bottom: 1px solid var(--border);">
-                <span>
-                    <strong style="font-size: 15px;">${monthName}</strong>
-                    <div style="font-size: 12px; opacity: 0.6;">Spent: €${item.totalSpent.toFixed(2)}</div>
-                </span>
-                <div style="text-align: right">
-                    <div style="font-weight: 800; color: ${item.saved >= 0 ? 'var(--success)' : 'var(--warning)'}">
-                        ${item.saved >= 0 ? '+' : ''}€${item.saved.toFixed(2)}
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-
-    list.innerHTML = html || '<p style="text-align:center; opacity:0.5;">No history yet.</p>';
-    lucide.createIcons();
-}
-
-function addSpending(idx) {
-    const amtInput = document.getElementById(`amt-${idx}`);
-    const dateInput = document.getElementById(`date-${idx}`);
-    
-    const amt = parsePrice(amtInput.value);
-    let date = dateInput.value;
-
-    if(!amt) return;
-
-    // Safety: Logic to ensure date fits the week range exactly
-    const minAllowed = dateInput.getAttribute('min');
-    const maxAllowed = dateInput.getAttribute('max');
-    
-    if (date < minAllowed) date = minAllowed;
-    if (date > maxAllowed) date = maxAllowed;
-
-    state.spendings.push({ 
-        id: crypto.randomUUID(), 
-        amount: amt, 
-        date: date, 
-        weekIndex: idx, 
-        timestamp: Date.now() 
-    });
-
-    amtInput.value = '';
-    saveLocal(); 
-    render();
-}
-
-function promptDelete(id) { 
-    itemToDelete = id; 
-    document.getElementById('delete-modal').classList.remove('hidden'); 
-}
-function closeDeleteModal() { 
-    document.getElementById('delete-modal').classList.add('hidden'); 
-}
 document.getElementById('confirm-delete-btn').onclick = () => {
     state.spendings = state.spendings.filter(s => s.id !== itemToDelete);
-    saveLocal(); render(); closeDeleteModal();
+    saveLocal(); render(); closeModal('delete-modal');
 };
-
-function toggleCollapse(id) {
-    const el = document.getElementById(id);
-    el.classList.toggle('collapsed');
-    state.collapsed[id] = el.classList.contains('collapsed');
-    saveLocal();
-}
-
-function toggleTheme() {
-    state.theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    applyTheme(); saveLocal();
-}
 
 function applyTheme() {
     const t = state.theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : state.theme;
@@ -333,12 +264,6 @@ function applyTheme() {
     const icon = document.getElementById('theme-icon');
     if(icon) icon.setAttribute('data-lucide', t === 'dark' ? 'sun' : 'moon');
     lucide.createIcons();
-}
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW failed", err));
-    });
 }
 
 init();
