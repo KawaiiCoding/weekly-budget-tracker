@@ -1,0 +1,11 @@
+{
+  "name": "Grocery Budget",
+  "short_name": "Grocery Budget",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#228be6",
+  "icons": [
+    { "src": "https://cdn-icons-png.flaticon.com/512/2344/2344132.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
