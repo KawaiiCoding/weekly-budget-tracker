@@ -22,7 +22,7 @@
             <div class="card-header" onclick="toggleCollapse('card-sync')">
                 <div class="status-indicator">
                     <span id="sync-status-dot" class="dot disconnected"></span>
-                    <span id="sync-status-text">Disconnected</span>
+                    <span id="sync-status-text">OFFLINE</span>
                     <span id="header-code-display" class="hidden">
                         <span id="header-code-text"></span>
                         <span class="copy-btn" onclick="copySyncCode(event)">
@@ -34,12 +34,12 @@
             </div>
             <div class="collapsible-content">
                 <div class="sync-controls" id="sync-controls-disconnected">
-                    <button class="btn btn-outline" onclick="generateSyncCode()">Generate Code</button>
+                    <button class="btn btn-outline" onclick="generateSyncCode()">Create Wallet</button>
                     <input type="text" id="sync-code-input" placeholder="Code..." maxlength="6">
                     <button class="btn btn-primary" onclick="joinSync()">Join</button>
                 </div>
                 <div class="sync-controls hidden" id="sync-controls-connected">
-                    <button class="btn btn-danger" onclick="disconnectSync()">Disconnect Room</button>
+                    <button class="btn btn-danger" onclick="disconnectSync()">Disconnect Wallet</button>
                 </div>
             </div>
         </div>
