@@ -13,6 +13,17 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 let isSyncing = false;
+let isOffline = !navigator.onLine;
+
+// Detect Connection Changes
+window.addEventListener('online', () => {
+    isOffline = false;
+    if (state.syncCode) window.appSyncData(state); // Re-sync immediately
+});
+window.addEventListener('offline', () => {
+    isOffline = true;
+    updateSyncUI('disconnected', state.syncCode);
+});
 
 function updateSyncUI(status, code = null) {
     const dot = document.getElementById('sync-status-dot');
@@ -22,32 +33,38 @@ function updateSyncUI(status, code = null) {
     const hDisplay = document.getElementById('header-code-display');
     const hText = document.getElementById('header-code-text');
 
-    dot.className = 'dot ' + status;
-    
+    if (isOffline) {
+        dot.className = 'dot disconnected';
+        text.innerText = 'OFFLINE';
+    } else {
+        dot.className = 'dot ' + status;
+        text.innerText = status === 'syncing' ? 'SYNCING' : 'LIVE';
+    }
+
     if(code) {
-        state.syncCode = code; // Sync state
+        state.syncCode = code;
         disc.classList.add('hidden');
         conn.classList.remove('hidden');
         hDisplay.classList.remove('hidden');
         hText.innerText = code;
-        text.innerText = status === 'syncing' ? 'SYNCING' : 'LIVE';
     } else {
         disc.classList.remove('hidden');
         conn.classList.add('hidden');
         hDisplay.classList.add('hidden');
-        text.innerText = 'OFFLINE';
+        text.innerText = 'LOCAL ONLY';
     }
     lucide.createIcons();
 }
 
 window.setSyncCodeUI = function(code) {
-    updateSyncUI('connected', code);
+    updateSyncUI(isOffline ? 'disconnected' : 'connected', code);
     database.ref('sync/' + code).on('value', (snap) => {
-        if(snap.exists() && !isSyncing) mergeData(snap.val());
+        if(snap.exists() && !isSyncing && !isOffline) mergeData(snap.val());
     });
 };
 
 function generateSyncCode() {
+    if (isOffline) return alert("Internet required to create wallet");
     const code = Math.random().toString(36).substring(2, 8).toUpperCase();
     window.setSyncCodeUI(code);
     saveLocal(); 
@@ -55,6 +72,7 @@ function generateSyncCode() {
 }
 
 function joinSync() {
+    if (isOffline) return alert("Internet required to join wallet");
     const code = document.getElementById('sync-code-input').value.toUpperCase();
     if(code.length !== 6) return;
     database.ref('sync/' + code).once('value', snap => {
@@ -79,7 +97,7 @@ window.copySyncCode = function(e) {
 };
 
 window.appSyncData = function(data) {
-    if(!state.syncCode || isSyncing) return;
+    if(!state.syncCode || isSyncing || isOffline) return;
     isSyncing = true;
     updateSyncUI('syncing', state.syncCode);
     database.ref('sync/' + state.syncCode).set(data).then(() => {
