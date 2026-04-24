@@ -35,14 +35,18 @@
         </header>
 
         <div class="sync-panel mantine-card" id="card-sync">
-            <div class="card-header" onclick="toggleCollapse('card-sync')">
+    <div class="card-header" onclick="toggleCollapse('card-sync')">
                 <div class="status-indicator">
-                    <span id="sync-status-dot" class="dot disconnected"></span>
-                    <span id="sync-status-text">OFFLINE</span>
-                    <span id="header-code-display" class="hidden">
+                    <div class="live-tag">
+                        <span id="sync-status-dot" class="dot disconnected"></span>
+                        <span id="sync-status-text">OFFLINE</span>
+                    </div>
+                    <div id="header-code-display" class="code-group hidden">
                         <span id="header-code-text"></span>
-                        <span class="copy-btn" onclick="copySyncCode(event)"><i data-lucide="copy" class="lucide-sm"></i></span>
-                    </span>
+                        <span class="copy-btn" onclick="copySyncCode(event)">
+                            <i data-lucide="copy" class="lucide-sm"></i>
+                        </span>
+                    </div>
                 </div>
                 <i data-lucide="chevron-down" class="collapse-icon"></i>
             </div>
@@ -55,7 +59,9 @@
                     </div>
                 </div>
                 <div class="sync-controls hidden" id="sync-controls-connected">
-                    <button class="btn btn-danger" style="width:100%" onclick="disconnectSync()">Disconnect Wallet</button>
+                    <button class="btn btn-danger" style="width:100%; justify-content: center; background: #fff5f5; color: var(--warning);" onclick="disconnectSync()">
+                        Disconnect Wallet
+                    </button>
                 </div>
             </div>
         </div>
