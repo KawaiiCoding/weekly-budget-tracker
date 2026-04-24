@@ -45,6 +45,7 @@ body {
     line-height: 1.4;
     transition: background-color 0.3s ease;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .container { max-width: 500px; margin: 0 auto; }
@@ -101,7 +102,6 @@ h1 {
     cursor: pointer; 
 }
 
-/* Title size fixes for Dashboard/Config */
 .card-header h2, .card-header h3 { 
     font-size: 15px; 
     font-weight: 700; 
@@ -127,7 +127,7 @@ label {
     opacity: 0.6; 
 }
 
-/* Standardized Inputs with Safari Fixes */
+/* Standardized Inputs with Webkit Fixes */
 input[type="text"], 
 input[type="number"], 
 input[type="date"] { 
@@ -137,17 +137,28 @@ input[type="date"] {
     border-radius: 8px; 
     background: var(--bg-color); 
     color: var(--text-primary); 
-    font-size: 15px; 
+    font-size: 16px; /* 16px prevents iOS auto-zoom on focus */
     width: 100%;
     outline: none;
-    -webkit-appearance: none; /* Fixes Safari rounded corners */
+    -webkit-appearance: none; 
+    appearance: none;
 }
 
+/* Date Picker Safari Grey-out / Icon Fix */
 input[type="date"] {
-    font-size: 12px;
+    font-size: 13px;
     padding: 0 4px;
     text-align: center;
-    min-width: 0; /* Allows shrinking in flex/grid */
+    min-width: 0;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(var(--theme-invert, 0)); /* Helps icon visibility in dark mode */
+}
+
+[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
 }
 
 /* Buttons */
@@ -174,7 +185,7 @@ input[type="date"] {
 
 .icon-btn { padding: 8px; width: 38px; height: 38px; flex-shrink: 0; }
 
-/* Status & Sync Indicator */
+/* Status Indicators */
 .status-indicator { 
     display: flex; 
     align-items: center; 
@@ -195,12 +206,12 @@ input[type="date"] {
 
 @keyframes pulse { 50% { opacity: 0.3; } }
 
-/* Collapsible Logic */
+/* Collapsible */
 .collapse-icon { transition: transform 0.3s; opacity: 0.4; width: 18px; height: 18px; }
 .collapsed .collapse-icon { transform: rotate(-90deg); }
 .collapsed .collapsible-content { display: none; }
 
-/* Dashboard & Stats */
+/* Dashboard */
 .dashboard-grid { 
     display: grid; 
     grid-template-columns: 1fr 1fr 1fr; 
@@ -212,7 +223,7 @@ input[type="date"] {
 .stat-box h3 { font-size: 10px; text-transform: uppercase; opacity: 0.5; margin-bottom: 2px; }
 .stat-box p { font-weight: 800; font-size: 13px; }
 
-/* --- SAFARI & MOBILE FIX: SPENDING LIST --- */
+/* --- SPENDING LIST & TINY TRASH FIX --- */
 .spending-list { margin-top: 15px; }
 
 .spending-item { 
@@ -221,24 +232,34 @@ input[type="date"] {
     align-items: center; 
     padding: 10px 0; 
     border-bottom: 1px solid var(--border);
-    gap: 10px; /* Space between text and button */
+    gap: 10px;
 }
 
-/* Wrap price and date to prevent wrapping */
 .spending-item > span {
     flex: 1;
-    min-width: 0; /* Safari overflow fix */
+    min-width: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: 14px;
 }
 
-.spending-item .btn-danger {
-    flex-shrink: 0; /* Prevents button from being squished or wrapped */
-    width: 32px !important;
-    height: 32px !important;
+/* Restored Small Trash Icon */
+.spending-item .btn-danger.icon-btn {
+    width: 28px !important;
+    height: 28px !important;
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 6px;
+}
+
+.spending-item .btn-danger.icon-btn i {
+    width: 14px !important;
+    height: 14px !important;
+    stroke-width: 2.5;
 }
 
 /* Modals */
@@ -252,6 +273,7 @@ input[type="date"] {
     z-index: 1000; 
     padding: 20px; 
     backdrop-filter: blur(4px); 
+    -webkit-backdrop-filter: blur(4px); /* Safari support */
 }
 
 .modal-content {
@@ -259,6 +281,7 @@ input[type="date"] {
     max-height: 90vh;
     width: 100%;
     max-width: 400px;
+    background: var(--card-bg);
 }
 
 @keyframes modalPop {
