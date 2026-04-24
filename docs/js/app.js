@@ -248,7 +248,7 @@ function renderHistory() {
                     <p style="font-size: 12px; opacity: 0.6; margin:0">Spent: €${currentSpent.toFixed(2)}</p>
                 </div>
                 <div style="text-align: right">
-                    <span style="font-size: 18px; font-weight: 900; color: var(--success)">€${currentSaved.toFixed(2)}</span>
+                    <span style="font-size: 18px; font-weight: 700; color: var(--success)">€${currentSaved.toFixed(2)}</span>
                 </div>
             </div>
         </div>
