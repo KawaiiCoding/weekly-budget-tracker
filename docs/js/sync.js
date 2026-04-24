@@ -10,26 +10,37 @@ const firebaseConfig = {
   appId: "1:563447884119:web:bc3d5b57a90d098f9e3612"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
 let currentSyncCode = null;
 let isSyncing = false;
 
-// --- Sync Functions ---
-function setSyncStatus(status) {
+function updateSyncUI(status, code = null) {
     const dot = document.getElementById('sync-status-dot');
     const text = document.getElementById('sync-status-text');
-    dot.className = 'dot'; // reset
+    const controlsDisconnected = document.getElementById('sync-controls-disconnected');
+    const controlsConnected = document.getElementById('sync-controls-connected');
+
+    dot.className = 'dot'; 
     
-    if(status === 'connected') {
-        dot.classList.add('connected');
-        text.innerText = 'Connected';
-    } else if (status === 'syncing') {
-        dot.classList.add('syncing');
-        text.innerText = 'Syncing...';
+    if (code) {
+        // Connected mode
+        controlsDisconnected.classList.add('hidden');
+        controlsConnected.classList.remove('hidden');
+        document.getElementById('active-code-display').innerHTML = `<strong>Code:</strong> ${code}`;
+        
+        if (status === 'syncing') {
+            dot.classList.add('syncing');
+            text.innerText = 'Syncing...';
+        } else {
+            dot.classList.add('connected');
+            text.innerText = 'Connected';
+        }
     } else {
+        // Disconnected mode
+        controlsDisconnected.classList.remove('hidden');
+        controlsConnected.classList.add('hidden');
         dot.classList.add('disconnected');
         text.innerText = 'Disconnected';
     }
@@ -37,7 +48,7 @@ function setSyncStatus(status) {
 
 window.setSyncCodeUI = function(code) {
     currentSyncCode = code;
-    document.getElementById('active-code-display').innerHTML = `<strong>Code:</strong> ${code}`;
+    updateSyncUI('connected', code);
     listenToCloud(code);
 };
 
@@ -46,12 +57,11 @@ function generateSyncCode() {
     let code = '';
     for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
     
-    state.syncCode = code; // Update app.js state
-    saveLocal();
+    state.syncCode = code;
+    saveLocal(); // in app.js
     window.setSyncCodeUI(code);
     
-    // Initial push
-    database.ref('sync/' + code).set(state).then(() => setSyncStatus('connected'));
+    database.ref('sync/' + code).set(state).then(() => updateSyncUI('connected', code));
 }
 
 function joinSync() {
@@ -63,15 +73,24 @@ function joinSync() {
             state.syncCode = code;
             mergeData(snapshot.val());
             window.setSyncCodeUI(code);
-            alert("Joined successfully!");
         } else {
             alert("Code not found or expired.");
         }
     });
 }
 
+function disconnectSync() {
+    if (currentSyncCode) {
+        database.ref('sync/' + currentSyncCode).off(); // Stop listening
+    }
+    currentSyncCode = null;
+    state.syncCode = null;
+    saveLocal(); // Save cleared state to local storage
+    updateSyncUI('disconnected', null);
+}
+
 function listenToCloud(code) {
-    setSyncStatus('connected');
+    updateSyncUI('connected', code);
     database.ref('sync/' + code).on('value', (snapshot) => {
         if(snapshot.exists() && !isSyncing) {
             mergeData(snapshot.val());
@@ -79,28 +98,26 @@ function listenToCloud(code) {
     });
 }
 
-// Hook called by app.js every 10s and on change
 window.appSyncData = function(localState) {
     if(!currentSyncCode) return;
     isSyncing = true;
-    setSyncStatus('syncing');
+    updateSyncUI('syncing', currentSyncCode);
     
+    // Completely overwrite cloud with local state to ensure deletions sync
     database.ref('sync/' + currentSyncCode).set(localState)
         .then(() => {
             setTimeout(() => {
                 isSyncing = false;
-                setSyncStatus('connected');
-            }, 1000);
+                updateSyncUI('connected', currentSyncCode);
+            }, 800);
         });
 }
 
-// Merge cloud data with local data
 function mergeData(cloudState) {
     if(!cloudState) return;
     
     let changed = false;
     
-    // Merge basic settings if newer (simplified: cloud overrides basic settings)
     if(cloudState.startDate && cloudState.startDate !== state.startDate) {
         state.startDate = cloudState.startDate;
         changed = true;
@@ -110,20 +127,18 @@ function mergeData(cloudState) {
         changed = true;
     }
     
-    // Merge spendings (avoid duplicates based on ID)
-    const localIds = state.spendings.map(s => s.id);
-    const cloudSpendings = cloudState.spendings || [];
+    // Because we support deletions, we just adopt the cloud state's spendings array directly
+    // This assumes the last writer wins (which works for our strict set() above)
+    const cloudSpendingsStr = JSON.stringify(cloudState.spendings || []);
+    const localSpendingsStr = JSON.stringify(state.spendings || []);
     
-    cloudSpendings.forEach(cs => {
-        if(!localIds.includes(cs.id)) {
-            state.spendings.push(cs);
-            changed = true;
-        }
-    });
+    if (cloudSpendingsStr !== localSpendingsStr) {
+        state.spendings = cloudState.spendings || [];
+        changed = true;
+    }
     
     if(changed) {
-        // Save without triggering a re-sync back to cloud immediately
         localStorage.setItem('budgetTrackerState', JSON.stringify(state));
-        render(); // from app.js
+        if (typeof render === "function") render(); 
     }
 }
