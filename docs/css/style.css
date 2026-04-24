@@ -17,6 +17,8 @@
     --border: #373a40;
 }
 
+* { box-sizing: border-box; } /* CRITICAL: Prevents inputs from exceeding card limits */
+
 body {
     background-color: var(--bg-color);
     color: var(--text-primary);
@@ -36,76 +38,75 @@ h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; margin: 0; }
     padding: 16px;
     margin-bottom: 12px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    overflow: hidden; /* Prevent input bleed */
 }
-
-.mantine-card.collapsed { padding: 12px 16px; }
 
 .card-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 .card-header h2, .card-header h3 { font-size: 15px; font-weight: 700; margin: 0; }
 
-/* FIX: Responsive Grid for Mobile Inputs */
+/* FIX: Improved Grid for mobile alignment */
 .config-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
-    gap: 12px; 
+    grid-template-columns: 1fr 1fr; /* Force 50/50 split */
+    gap: 10px; 
     margin-top: 15px; 
+    width: 100%;
 }
-
-/* FIX: Join Wallet group */
-.join-group {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-.join-group input { flex: 1; min-width: 0; }
-
-.status-indicator { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; }
-#header-code-display { 
-    background: var(--bg-color); padding: 4px 8px; border-radius: 6px; 
-    font-family: monospace; display: flex; align-items: center; gap: 4px;
-    border: 1px solid var(--border);
-}
-
-.lucide-sm { width: 14px; height: 14px; stroke-width: 2.5px; }
-.collapse-icon { width: 18px; height: 18px; transition: 0.3s; opacity: 0.4; }
-.collapsed .collapse-icon { transform: rotate(-90deg); }
-
-.dot { height: 8px; width: 8px; border-radius: 50%; }
-.dot.disconnected { background: #fd7e14; } /* Orange for Offline */
-.dot.connected { background: var(--success); }
-.dot.syncing { background: var(--primary); animation: pulse 1s infinite; }
-
-@keyframes pulse { 50% { opacity: 0.3; } }
-
-.collapsible-content { margin-top: 0; }
-.collapsed .collapsible-content { display: none; }
 
 .input-group { display: flex; flex-direction: column; min-width: 0; }
 label { font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; opacity: 0.6; }
-input { 
-    padding: 10px; border: 1px solid var(--border); border-radius: 8px; 
-    background: var(--bg-color); color: var(--text-primary); font-size: 16px;
-    width: 100%; box-sizing: border-box;
+
+/* FIX: Standardize all input types to look identical */
+input[type="text"], 
+input[type="number"], 
+input[type="date"],
+#sync-code-input { 
+    height: 44px; /* Fixed height for alignment */
+    padding: 0 12px; 
+    border: 1px solid var(--border); 
+    border-radius: 8px; 
+    background: var(--bg-color); 
+    color: var(--text-primary); 
+    font-size: 14px; /* 16px prevents iOS zoom, 14px looks cleaner */
+    width: 100%;
+    -webkit-appearance: none; /* Remove iOS default styles */
+    display: block;
 }
 
-.btn { padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; font-size: 14px; transition: opacity 0.2s; white-space: nowrap; }
-.icon-btn { padding: 8px; display: flex; align-items: center; justify-content: center; }
+/* Specific fix for the date input's internal spacing */
+input[type="date"] {
+    line-height: 44px; /* Centers text vertically */
+    padding-right: 4px; 
+}
+
+.btn { 
+    height: 44px; 
+    padding: 0 16px; 
+    border-radius: 8px; 
+    border: none; 
+    font-weight: 700; 
+    cursor: pointer; 
+    font-size: 14px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+}
+
 .btn-primary { background: var(--primary); color: white; }
 .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
 .btn-danger { background: #fff5f5; color: var(--warning); border: 1px solid #ffc9c9; }
-[data-theme="dark"] .btn-danger { background: #2c1a1a; }
 
+/* Dashboard and status styles (Keep original) */
+.status-indicator { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 800; }
+#header-code-display { background: var(--bg-color); padding: 4px 8px; border-radius: 6px; display: flex; align-items: center; gap: 4px; border: 1px solid var(--border); }
+.dot { height: 8px; width: 8px; border-radius: 50%; }
+.dot.disconnected { background: #fd7e14; }
+.dot.connected { background: var(--success); }
+.lucide-sm { width: 14px; height: 14px; stroke-width: 2.5px; }
+.collapse-icon { width: 18px; height: 18px; transition: 0.3s; opacity: 0.4; }
+.collapsed .collapsible-content { display: none; }
 .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; text-align: center; margin-top: 15px; }
 .stat-box h3 { font-size: 10px; text-transform: uppercase; opacity: 0.5; margin-bottom: 2px; }
 .stat-box p { font-weight: 800; font-size: 13px; margin: 0; }
-
-.spending-list { margin-top: 15px; }
-.spending-item { 
-    display: flex; justify-content: space-between; align-items: center; 
-    padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px;
-}
-
+.spending-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
 .hidden { display: none !important; }
-.mt-1 { margin-top: 10px; }
