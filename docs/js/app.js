@@ -95,7 +95,7 @@ function render() {
                 <div class="collapsible-content">
                     <p style="font-size:10px; opacity:0.5; margin: 12px 0 6px 0; font-weight:800;">LIMIT: €${weekBudgets[i].toFixed(2)}</p>
                     <div class="config-grid">
-                        <input type="text" id="amt-${i}" placeholder="€" inputmode="decimal">
+                        <input type="text" id="amt-${i}" placeholder="€" placeholder="10.00" inputmode="decimal">
                         <input type="date" id="date-${i}" value="${new Date().toISOString().split('T')[0]}">
                     </div>
                     <button class="btn btn-primary" style="width:100%; margin-top:10px" onclick="addSpending(${i})">Add Spending</button>
