@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Budget Tracker</title>
+    <title>Wallet Budget Tracker</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -35,11 +35,13 @@
             <div class="collapsible-content">
                 <div class="sync-controls" id="sync-controls-disconnected">
                     <button class="btn btn-outline" onclick="generateSyncCode()">Create Wallet</button>
-                    <input type="text" id="sync-code-input" placeholder="Code..." maxlength="6">
-                    <button class="btn btn-primary" onclick="joinSync()">Join</button>
+                    <div class="join-group">
+                        <input type="text" id="sync-code-input" placeholder="Code..." maxlength="6">
+                        <button class="btn btn-primary" onclick="joinSync()">Join</button>
+                    </div>
                 </div>
                 <div class="sync-controls hidden" id="sync-controls-connected">
-                    <button class="btn btn-danger" onclick="disconnectSync()">Disconnect Wallet</button>
+                    <button class="btn btn-danger" style="width:100%" onclick="disconnectSync()">Disconnect Wallet</button>
                 </div>
             </div>
         </div>
