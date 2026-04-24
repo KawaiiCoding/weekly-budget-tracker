@@ -7,13 +7,12 @@
     <meta name="apple-mobile-web-app-title" content="Wallet">
     
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2344/2344132.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://cdn-icons-png.flaticon.com/512/2344/2344132.png">
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#228be6">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="stylesheet" href="css/style.css">
+    
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -21,10 +20,18 @@
 <body>
     <div class="container">
         <header>
-            <h1>Budget Tracker</h1>
-            <button id="theme-toggle" class="btn btn-outline icon-btn" onclick="toggleTheme()" style="height: 38px; width: 38px;">
-                <i data-lucide="moon" id="theme-icon" class="lucide-sm"></i>
-            </button>
+            <div style="display: flex; align-items: center;">
+                <img id="pompom-icon" src="https://i.pinimg.com/originals/81/73/06/817306233d6b13e9a7e802772584d433.png" alt="cute">
+                <h1>Budget Tracker</h1>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button id="persona-toggle" class="btn btn-outline icon-btn" onclick="togglePersona()">
+                    <i data-lucide="user" id="persona-icon" class="lucide-sm"></i>
+                </button>
+                <button id="theme-toggle" class="btn btn-outline icon-btn" onclick="toggleTheme()">
+                    <i data-lucide="moon" id="theme-icon" class="lucide-sm"></i>
+                </button>
+            </div>
         </header>
 
         <div class="sync-panel mantine-card" id="card-sync">
@@ -34,9 +41,7 @@
                     <span id="sync-status-text">OFFLINE</span>
                     <span id="header-code-display" class="hidden">
                         <span id="header-code-text"></span>
-                        <span class="copy-btn" onclick="copySyncCode(event)">
-                            <i data-lucide="copy" class="lucide-sm"></i>
-                        </span>
+                        <span class="copy-btn" onclick="copySyncCode(event)"><i data-lucide="copy" class="lucide-sm"></i></span>
                     </span>
                 </div>
                 <i data-lucide="chevron-down" class="collapse-icon"></i>
@@ -94,7 +99,6 @@
     <div id="delete-modal" class="modal hidden">
         <div class="modal-content mantine-card" style="width: 90%; max-width: 300px;">
             <h3>Delete Entry?</h3>
-            <p style="font-size: 14px; opacity: 0.8;">This cannot be undone.</p>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn btn-outline" style="flex:1" onclick="closeDeleteModal()">No</button>
                 <button class="btn btn-danger" style="flex:1" id="confirm-delete-btn">Yes</button>
@@ -106,7 +110,7 @@
         <div class="modal-content mantine-card" style="width: 90%; max-width: 350px; text-align: center;">
             <div style="font-size: 40px; margin-bottom: 10px;">🗓️</div>
             <h3>Start New Month?</h3>
-            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 20px;">Current spendings will be archived and the start date will move forward 4 weeks.</p>
+            <p style="font-size: 14px; opacity: 0.7; margin-bottom: 20px;">Archives current data and rolls the date forward.</p>
             <div style="display: flex; gap: 10px;">
                 <button class="btn btn-outline" style="flex:1" onclick="closeModal('new-month-modal')">Cancel</button>
                 <button class="btn btn-primary" style="flex:1" onclick="confirmNewMonth()">Start Fresh</button>
@@ -122,8 +126,7 @@
                     <i data-lucide="x"></i>
                 </button>
             </div>
-            <div id="history-list" style="margin-top: 15px;">
-                </div>
+            <div id="history-list" style="margin-top: 15px;"></div>
         </div>
     </div>
 
