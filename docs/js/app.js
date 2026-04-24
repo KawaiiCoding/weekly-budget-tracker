@@ -12,8 +12,8 @@ let itemToDelete = null;
 function init() {
     loadLocal();
     applyTheme();
-    // CRITICAL FIX: Trigger UI update for sync on load
-    if (state.syncCode && window.setSyncCodeUI) {
+    // Re-bind sync UI if a wallet code exists
+    if(state.syncCode && window.setSyncCodeUI) {
         window.setSyncCodeUI(state.syncCode);
     }
     render();
@@ -27,15 +27,14 @@ function parsePrice(val) {
 
 function loadLocal() {
     const saved = localStorage.getItem('budgetTrackerState');
-    if (saved) {
-        state = { ...state, ...JSON.parse(saved) };
-    }
+    if (saved) state = { ...state, ...JSON.parse(saved) };
     document.getElementById('start-date').value = state.startDate;
     document.getElementById('total-budget').value = state.totalBudget;
 }
 
 function saveLocal() {
     localStorage.setItem('budgetTrackerState', JSON.stringify(state));
+    // Trigger sync if online
     if(window.appSyncData) window.appSyncData(state);
 }
 
@@ -86,7 +85,7 @@ function render() {
             <div class="mantine-card ${isCollapsed}" id="week-${i}">
                 <div class="card-header" onclick="toggleCollapse('week-${i}')">
                     <h3>Week ${i+1}</h3>
-                    <div style="display:flex; align-items:center; gap:10px">
+                    <div style="display:flex; align-items:center; gap:8px">
                         <span style="font-size:12px; font-weight:800; color:${wRem < 0 ? 'var(--warning)' : 'var(--success)'}">
                             €${wRem.toFixed(2)}
                         </span>
@@ -94,16 +93,16 @@ function render() {
                     </div>
                 </div>
                 <div class="collapsible-content">
-                    <p style="font-size:11px; opacity:0.6; margin: 10px 0 5px 0">WEEKLY LIMIT: €${weekBudgets[i].toFixed(2)}</p>
+                    <p style="font-size:10px; opacity:0.5; margin: 12px 0 6px 0; font-weight:800;">LIMIT: €${weekBudgets[i].toFixed(2)}</p>
                     <div class="config-grid">
-                        <input type="text" id="amt-${i}" placeholder="0.00" inputmode="decimal">
+                        <input type="text" id="amt-${i}" placeholder="€" inputmode="decimal">
                         <input type="date" id="date-${i}" value="${new Date().toISOString().split('T')[0]}">
                     </div>
                     <button class="btn btn-primary" style="width:100%; margin-top:10px" onclick="addSpending(${i})">Add Spending</button>
                     <div class="spending-list">
                         ${state.spendings.filter(s => s.weekIndex === i).sort((a,b) => b.timestamp - a.timestamp).map(s => `
                             <div class="spending-item">
-                                <span>€${s.amount.toFixed(2)} <small style="opacity:0.5; margin-left:5px">${s.date.split('-').reverse().join('.')}</small></span>
+                                <span>€${s.amount.toFixed(2)} <small style="opacity:0.5; margin-left:4px">${s.date.split('-').reverse().join('.')}</small></span>
                                 <button class="btn-danger btn icon-btn" onclick="promptDelete('${s.id}')">
                                     <i data-lucide="trash-2" class="lucide-sm"></i>
                                 </button>
@@ -118,8 +117,7 @@ function render() {
 }
 
 function addSpending(idx) {
-    const rawAmt = document.getElementById(`amt-${idx}`).value;
-    const amt = parsePrice(rawAmt);
+    const amt = parsePrice(document.getElementById(`amt-${idx}`).value);
     const date = document.getElementById(`date-${idx}`).value;
     if(!amt) return;
     state.spendings.push({ id: crypto.randomUUID(), amount: amt, date, weekIndex: idx, timestamp: Date.now() });
