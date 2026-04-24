@@ -255,25 +255,54 @@ function render() {
 
 function renderHistory() {
     const list = document.getElementById('history-list');
-    if (!list) return;
+    const currentSpent = state.spendings.reduce((a, b) => a + b.amount, 0);
+    const currentSaved = state.totalBudget - currentSpent;
+
+    let html = `
+        <div class="mantine-card" style="border: 2px solid var(--primary); background: rgba(34, 139, 230, 0.05); margin-bottom: 20px;">
+            <small style="font-weight: 800; color: var(--primary)">CURRENT ACTIVE CYCLE</small>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <div>
+                    <h3 style="margin:0">${new Date(state.startDate).toLocaleDateString('default', {month:'long', year:'numeric'})}</h3>
+                    <p style="font-size: 12px; opacity: 0.6; margin:0">Spent so far: €${currentSpent.toFixed(2)}</p>
+                </div>
+                <div style="text-align: right">
+                    <span style="font-size: 18px; font-weight: 900; color: var(--success)">€${currentSaved.toFixed(2)}</span>
+                    <p style="font-size: 10px; opacity: 0.5; margin:0">LEFT</p>
+                </div>
+            </div>
+        </div>
+        <h3 style="font-size: 12px; opacity: 0.4; text-transform: uppercase; margin: 20px 0 10px 0;">Past Months Archive</h3>
+    `;
 
     if (state.history.length === 0) {
-        list.innerHTML = `<p style="text-align:center; opacity:0.5; padding: 20px;">No archived months yet.</p>`;
-        return;
+        html += `<p style="text-align:center; opacity:0.5; padding: 20px;">No archived months yet.</p>`;
     }
 
-    list.innerHTML = state.history.map(h => `
-        <div class="mantine-card" style="margin-bottom: 10px; border-style: dashed;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h4 style="font-size:13px;">Started: ${h.startDate.split('-').reverse().join('.')}</h4>
-                <span style="font-weight:800; color:var(--success)">Saved: €${h.saved.toFixed(2)}</span>
+    state.history.forEach(item => {
+        const dateObj = new Date(item.startDate);
+        const monthName = dateObj.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+        
+        html += `
+            <div class="spending-item" style="padding: 15px 0; border-bottom: 1px solid var(--border);">
+                <div>
+                    <strong style="font-size: 15px;">${monthName}</strong>
+                    <div style="font-size: 12px; opacity: 0.6;">Budget: €${item.totalBudget.toFixed(2)} | Spent: €${item.totalSpent.toFixed(2)}</div>
+                </div>
+                <div style="text-align: right">
+                    <div style="font-weight: 800; color: ${item.saved >= 0 ? 'var(--success)' : 'var(--warning)'}">
+                        ${item.saved >= 0 ? '+' : ''}€${item.saved.toFixed(2)}
+                    </div>
+                    <small style="font-size: 9px; opacity: 0.5;">SAVED</small>
+                </div>
             </div>
-            <p style="font-size:11px; opacity:0.6; margin-top:5px;">
-                Budget: €${h.totalBudget.toFixed(2)} | Spent: €${h.totalSpent.toFixed(2)}
-            </p>
-        </div>
-    `).join('');
+        `;
+    });
+
+    list.innerHTML = html;
+    lucide.createIcons();
 }
+
 
 document.getElementById('confirm-delete-btn').onclick = () => {
     if (itemToDelete) {
