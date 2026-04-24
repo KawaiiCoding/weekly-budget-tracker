@@ -13,8 +13,8 @@
     <div class="container">
         <header>
             <h1>Budget Tracker</h1>
-            <button id="theme-toggle" class="btn btn-outline icon-btn" onclick="toggleTheme()">
-                <i data-lucide="moon" id="theme-icon"></i>
+            <button id="theme-toggle" class="btn btn-outline icon-btn" onclick="toggleTheme()" style="height: 38px; width: 38px;">
+                <i data-lucide="moon" id="theme-icon" class="lucide-sm"></i>
             </button>
         </header>
 
@@ -32,10 +32,10 @@
                 </div>
                 <i data-lucide="chevron-down" class="collapse-icon"></i>
             </div>
-            <div class="collapsible-content">
+            <div class="collapsible-content" style="margin-top: 15px;">
                 <div class="sync-controls" id="sync-controls-disconnected">
-                    <button class="btn btn-outline" onclick="generateSyncCode()">Create Wallet</button>
-                    <div class="join-group">
+                    <button class="btn btn-outline" style="width:100%" onclick="generateSyncCode()">Create Wallet</button>
+                    <div class="config-grid" style="grid-template-columns: 1fr 80px;">
                         <input type="text" id="sync-code-input" placeholder="Code..." maxlength="6">
                         <button class="btn btn-primary" onclick="joinSync()">Join</button>
                     </div>
@@ -54,12 +54,12 @@
             <div class="collapsible-content">
                 <div class="config-grid">
                     <div class="input-group">
-                        <label>Budget (€)</label>
-                        <input type="text" id="total-budget" placeholder="1000.00" onchange="updateSettings()">
-                    </div>
-                    <div class="input-group">
                         <label>Start Date</label>
                         <input type="date" id="start-date" onchange="updateSettings()">
+                    </div>
+                    <div class="input-group">
+                        <label>Budget (€)</label>
+                        <input type="text" id="total-budget" placeholder="1000.00" onchange="updateSettings()">
                     </div>
                 </div>
             </div>
@@ -79,16 +79,16 @@
             </div>
         </section>
 
-        <section id="weeks-container" class="weeks-grid"></section>
+        <section id="weeks-container"></section>
     </div>
 
     <div id="delete-modal" class="modal hidden">
-        <div class="modal-content mantine-card">
+        <div class="modal-content mantine-card" style="width: 90%; max-width: 300px;">
             <h3>Delete Entry?</h3>
-            <p>This will remove the spending forever.</p>
-            <div class="modal-actions mt-1">
-                <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
-                <button class="btn btn-danger" id="confirm-delete-btn">Delete</button>
+            <p style="font-size: 14px; opacity: 0.8;">This cannot be undone.</p>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-outline" style="flex:1" onclick="closeDeleteModal()">No</button>
+                <button class="btn btn-danger" style="flex:1" id="confirm-delete-btn">Yes</button>
             </div>
         </div>
     </div>
