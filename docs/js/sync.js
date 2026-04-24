@@ -1,13 +1,13 @@
 // --- Firebase Configuration ---
 // REPLACE THIS WITH YOUR FIREBASE CONFIG
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123:web:123"
+  apiKey: "AIzaSyDVc2cc-0Q2cnx_ev2jreni9rDZVF4IQgY",
+  authDomain: "weekly-budget-planner-app.firebaseapp.com",
+  databaseURL: "https://weekly-budget-planner-app-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "weekly-budget-planner-app",
+  storageBucket: "weekly-budget-planner-app.firebasestorage.app",
+  messagingSenderId: "563447884119",
+  appId: "1:563447884119:web:bc3d5b57a90d098f9e3612"
 };
 
 // Initialize Firebase
