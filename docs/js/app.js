@@ -5,6 +5,7 @@ let state = {
     history: [], // Stores archived months
     syncCode: null,
     theme: 'auto',
+    persona: 'dude', // NEW: 'dude' or 'girl'
     collapsed: {}
 };
 
@@ -13,10 +14,31 @@ let itemToDelete = null;
 function init() {
     loadLocal();
     applyTheme();
+    applyPersona(); // Apply Dude/Girl style on startup
     if(state.syncCode && window.setSyncCodeUI) {
         window.setSyncCodeUI(state.syncCode);
     }
     render();
+}
+
+// --- PERSONA LOGIC (DUDE/GIRL) ---
+function togglePersona() {
+    state.persona = state.persona === 'dude' ? 'girl' : 'dude';
+    applyPersona();
+    saveLocal(); // Saves to LocalStorage and Syncs
+}
+
+function applyPersona() {
+    const htmlEl = document.documentElement;
+    // This triggers the CSS variables in your style.css
+    htmlEl.setAttribute('data-style', state.persona);
+    
+    const icon = document.getElementById('persona-icon');
+    if (icon) {
+        // Change icon to heart for girl mode, user for dude mode
+        icon.setAttribute('data-lucide', state.persona === 'girl' ? 'heart' : 'user');
+    }
+    lucide.createIcons();
 }
 
 // --- MODAL HELPERS ---
@@ -34,7 +56,6 @@ function confirmNewMonth() {
     const totalSpent = state.spendings.reduce((a, b) => a + b.amount, 0);
     const saved = state.totalBudget - totalSpent;
 
-    // 1. Create Archive Entry
     const archiveEntry = {
         id: crypto.randomUUID(),
         startDate: state.startDate,
@@ -44,16 +65,13 @@ function confirmNewMonth() {
         spendings: [...state.spendings]
     };
 
-    // 2. Update State
-    state.history.unshift(archiveEntry); // Add to top of history
+    state.history.unshift(archiveEntry);
     state.spendings = [];
     
-    // Move Start Date forward by 28 days (4 weeks)
     let d = new Date(state.startDate);
     d.setDate(d.getDate() + 28);
     state.startDate = d.toISOString().split('T')[0];
     
-    // Update the settings input field visually
     const dateInput = document.getElementById('start-date');
     if(dateInput) dateInput.value = state.startDate;
 
@@ -62,7 +80,7 @@ function confirmNewMonth() {
     render();
 }
 
-// HELPER: Calculates the date range for a specific week based on Start Date
+// HELPER: Week Ranges
 function getWeekRange(startStr, weekIdx) {
     let start = new Date(startStr);
     let firstDay = new Date(start);
@@ -85,15 +103,21 @@ function parsePrice(val) {
     return parseFloat(normalized) || 0;
 }
 
+// --- STORAGE & SYNC ---
 function loadLocal() {
     const saved = localStorage.getItem('budgetTrackerState');
-    if (saved) state = { ...state, ...JSON.parse(saved) };
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        state = { ...state, ...parsed };
+    }
+    // Update UI elements to match loaded state
     document.getElementById('start-date').value = state.startDate;
     document.getElementById('total-budget').value = state.totalBudget;
 }
 
 function saveLocal() {
     localStorage.setItem('budgetTrackerState', JSON.stringify(state));
+    // If sync.js is loaded, push to Firebase
     if(window.appSyncData) window.appSyncData(state);
 }
 
@@ -112,6 +136,7 @@ function calculateWeekIndex(spendStr, startStr) {
     return Math.max(0, Math.min(Math.floor(diff / 7), 3));
 }
 
+// --- RENDER LOGIC ---
 function render() {
     let weekSpends = [0, 0, 0, 0];
     state.spendings.forEach(s => {
@@ -135,7 +160,6 @@ function render() {
     for (let i = 0; i < 4; i++) {
         const range = getWeekRange(state.startDate, i);
         const isCurrentWeek = (todayStr >= range.min && todayStr <= range.max);
-        
         const isCollapsed = isCurrentWeek ? '' : (state.collapsed[`week-${i}`] ? 'collapsed' : '');
         const wRem = weekBudgets[i] - weekSpends[i];
         
@@ -184,11 +208,11 @@ function render() {
         `;
     }
 
-    // Add Archive & History Trigger at the end of the container
+    // History & New Month Buttons
     container.innerHTML += `
         <div style="display: flex; gap: 10px; margin-top: 20px; margin-bottom: 40px;">
             <button class="btn btn-outline" style="flex: 1;" onclick="openModal('history-modal')">
-                <i data-lucide="history" style="width: 14px; margin-right: 6px;"></i> History & Stats
+                <i data-lucide="history" style="width: 14px; margin-right: 6px;"></i> History
             </button>
             <button class="btn btn-primary" style="flex: 1;" onclick="openModal('new-month-modal')">
                 <i data-lucide="calendar-plus" style="width: 14px; margin-right: 6px;"></i> Next Month
@@ -214,42 +238,34 @@ function renderHistory() {
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                 <div>
                     <h3 style="margin:0">${new Date(state.startDate).toLocaleDateString('default', {month:'long', year:'numeric'})}</h3>
-                    <p style="font-size: 12px; opacity: 0.6; margin:0">Spent so far: €${currentSpent.toFixed(2)}</p>
+                    <p style="font-size: 12px; opacity: 0.6; margin:0">Spent: €${currentSpent.toFixed(2)}</p>
                 </div>
                 <div style="text-align: right">
                     <span style="font-size: 18px; font-weight: 900; color: var(--success)">€${currentSaved.toFixed(2)}</span>
-                    <p style="font-size: 10px; opacity: 0.5; margin:0">LEFT</p>
                 </div>
             </div>
         </div>
-        <h3 style="font-size: 12px; opacity: 0.4; text-transform: uppercase; margin: 20px 0 10px 0;">Past Months Archive</h3>
     `;
-
-    if (state.history.length === 0) {
-        html += `<p style="text-align:center; opacity:0.5; padding: 20px;">No archived months yet.</p>`;
-    }
 
     state.history.forEach(item => {
         const dateObj = new Date(item.startDate);
         const monthName = dateObj.toLocaleDateString('default', { month: 'long', year: 'numeric' });
-        
         html += `
             <div class="spending-item" style="padding: 15px 0; border-bottom: 1px solid var(--border);">
                 <div>
                     <strong style="font-size: 15px;">${monthName}</strong>
-                    <div style="font-size: 12px; opacity: 0.6;">Budget: €${item.totalBudget.toFixed(2)} | Spent: €${item.totalSpent.toFixed(2)}</div>
+                    <div style="font-size: 12px; opacity: 0.6;">Spent: €${item.totalSpent.toFixed(2)}</div>
                 </div>
                 <div style="text-align: right">
                     <div style="font-weight: 800; color: ${item.saved >= 0 ? 'var(--success)' : 'var(--warning)'}">
                         ${item.saved >= 0 ? '+' : ''}€${item.saved.toFixed(2)}
                     </div>
-                    <small style="font-size: 9px; opacity: 0.5;">SAVED</small>
                 </div>
             </div>
         `;
     });
 
-    list.innerHTML = html;
+    list.innerHTML = html || '<p style="text-align:center; opacity:0.5;">No history yet.</p>';
     lucide.createIcons();
 }
 
@@ -261,8 +277,13 @@ function addSpending(idx) {
     saveLocal(); render();
 }
 
-function promptDelete(id) { itemToDelete = id; document.getElementById('delete-modal').classList.remove('hidden'); }
-function closeDeleteModal() { document.getElementById('delete-modal').classList.add('hidden'); }
+function promptDelete(id) { 
+    itemToDelete = id; 
+    document.getElementById('delete-modal').classList.remove('hidden'); 
+}
+function closeDeleteModal() { 
+    document.getElementById('delete-modal').classList.add('hidden'); 
+}
 document.getElementById('confirm-delete-btn').onclick = () => {
     state.spendings = state.spendings.filter(s => s.id !== itemToDelete);
     saveLocal(); render(); closeDeleteModal();
