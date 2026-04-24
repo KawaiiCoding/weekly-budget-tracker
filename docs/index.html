@@ -14,12 +14,16 @@
             <h1>Budget Tracker</h1>
             <button id="theme-toggle" class="btn btn-outline" onclick="toggleTheme()">🌙</button>
         </header>
-
-        <div class="sync-panel mantine-card" id="card-sync">
+                <div class="sync-panel mantine-card" id="card-sync">
             <div class="card-header" onclick="toggleCollapse('card-sync')">
-                <div class="status-indicator">
+                <div class="status-indicator" style="display: flex; align-items: center;">
                     <span id="sync-status-dot" class="dot disconnected"></span>
                     <span id="sync-status-text">Disconnected</span>
+                    
+                    <span id="header-code-display" class="hidden" style="margin-left: 10px; background: var(--bg-color); padding: 2px 8px; border-radius: 4px; font-weight: bold; font-family: monospace;">
+                        <span id="header-code-text"></span>
+                        <span style="cursor: pointer; margin-left: 5px; font-size: 16px;" onclick="copySyncCode(event)" title="Copy Code">📋</span>
+                    </span>
                 </div>
                 <span class="collapse-icon">▼</span>
             </div>
@@ -30,11 +34,10 @@
                     <button class="btn btn-primary" onclick="joinSync()">Join</button>
                 </div>
                 <div class="sync-controls hidden" id="sync-controls-connected">
-                    <div id="active-code-display"></div>
                     <button class="btn btn-danger" onclick="disconnectSync()">Disconnect</button>
                 </div>
             </div>
-        </div>
+            </div>
 
         <section class="setup-panel mantine-card" id="card-setup">
             <div class="card-header" onclick="toggleCollapse('card-setup')">
