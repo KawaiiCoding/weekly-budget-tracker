@@ -40,16 +40,21 @@ h1 { font-size: 1.5rem; }
     padding: 15px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     margin-bottom: 15px;
-    transition: background-color 0.3s, border-color 0.3s;
+    transition: padding 0.3s, background-color 0.3s, border-color 0.3s;
 }
 
-/* Collapsible styles */
+/* NEW: Shrink padding when collapsed */
+.mantine-card.collapsed {
+    padding: 12px 15px;
+}
+
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
     user-select: none;
+    margin: 0; /* Ensures it sits flush when collapsed */
 }
 .collapse-icon { transition: transform 0.3s ease; }
 .collapsed .collapse-icon { transform: rotate(-90deg); }
