@@ -16,19 +16,22 @@ const database = firebase.database();
 let currentSyncCode = null;
 let isSyncing = false;
 
+// Add this right inside updateSyncUI()
 function updateSyncUI(status, code = null) {
     const dot = document.getElementById('sync-status-dot');
     const text = document.getElementById('sync-status-text');
     const controlsDisconnected = document.getElementById('sync-controls-disconnected');
     const controlsConnected = document.getElementById('sync-controls-connected');
+    const headerCode = document.getElementById('header-code-display');
+    const headerText = document.getElementById('header-code-text');
 
     dot.className = 'dot'; 
     
     if (code) {
-        // Connected mode
         controlsDisconnected.classList.add('hidden');
         controlsConnected.classList.remove('hidden');
-        document.getElementById('active-code-display').innerHTML = `<strong>Code:</strong> ${code}`;
+        headerCode.classList.remove('hidden');
+        headerText.innerText = code;
         
         if (status === 'syncing') {
             dot.classList.add('syncing');
@@ -38,13 +41,23 @@ function updateSyncUI(status, code = null) {
             text.innerText = 'Connected';
         }
     } else {
-        // Disconnected mode
         controlsDisconnected.classList.remove('hidden');
         controlsConnected.classList.add('hidden');
+        headerCode.classList.add('hidden');
         dot.classList.add('disconnected');
         text.innerText = 'Disconnected';
     }
 }
+
+// Add this anywhere in sync.js to handle the copy button
+window.copySyncCode = function(event) {
+    event.stopPropagation(); // Prevents the card from collapsing when clicking copy
+    if (currentSyncCode) {
+        navigator.clipboard.writeText(currentSyncCode)
+            .then(() => alert("Code copied to clipboard!"))
+            .catch(() => alert("Failed to copy code."));
+    }
+};
 
 window.setSyncCodeUI = function(code) {
     currentSyncCode = code;
