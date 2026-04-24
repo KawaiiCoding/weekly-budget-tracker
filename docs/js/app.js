@@ -253,6 +253,28 @@ function render() {
     lucide.createIcons();
 }
 
+function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (!list) return;
+
+    if (state.history.length === 0) {
+        list.innerHTML = `<p style="text-align:center; opacity:0.5; padding: 20px;">No archived months yet.</p>`;
+        return;
+    }
+
+    list.innerHTML = state.history.map(h => `
+        <div class="mantine-card" style="margin-bottom: 10px; border-style: dashed;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4 style="font-size:13px;">Started: ${h.startDate.split('-').reverse().join('.')}</h4>
+                <span style="font-weight:800; color:var(--success)">Saved: €${h.saved.toFixed(2)}</span>
+            </div>
+            <p style="font-size:11px; opacity:0.6; margin-top:5px;">
+                Budget: €${h.totalBudget.toFixed(2)} | Spent: €${h.totalSpent.toFixed(2)}
+            </p>
+        </div>
+    `).join('');
+}
+
 document.getElementById('confirm-delete-btn').onclick = () => {
     if (itemToDelete) {
         state.spendings = state.spendings.filter(s => s.id !== itemToDelete);
