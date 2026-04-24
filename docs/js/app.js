@@ -12,11 +12,13 @@ let itemToDelete = null;
 function init() {
     loadLocal();
     applyTheme();
-    if(state.syncCode && window.setSyncCodeUI) window.setSyncCodeUI(state.syncCode);
+    // CRITICAL FIX: Trigger UI update for sync on load
+    if (state.syncCode && window.setSyncCodeUI) {
+        window.setSyncCodeUI(state.syncCode);
+    }
     render();
 }
 
-// Helper to handle , and . in prices
 function parsePrice(val) {
     if (typeof val !== 'string') val = String(val);
     const normalized = val.replace(',', '.');
@@ -25,7 +27,9 @@ function parsePrice(val) {
 
 function loadLocal() {
     const saved = localStorage.getItem('budgetTrackerState');
-    if (saved) state = { ...state, ...JSON.parse(saved) };
+    if (saved) {
+        state = { ...state, ...JSON.parse(saved) };
+    }
     document.getElementById('start-date').value = state.startDate;
     document.getElementById('total-budget').value = state.totalBudget;
 }
