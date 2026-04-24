@@ -36,7 +36,7 @@ function applyPersona() {
     const icon = document.getElementById('persona-icon');
     if (icon) {
         // Change icon to heart for girl mode, user for dude mode
-        icon.setAttribute('data-lucide', state.persona === 'girl' ? 'heart' : 'user');
+        icon.setAttribute('data-lucide', state.persona === 'girl' ? 'sparkles' : 'user');
     }
     lucide.createIcons();
 }
