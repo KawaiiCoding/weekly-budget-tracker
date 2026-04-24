@@ -137,14 +137,13 @@ input[type="date"] {
     border-radius: 8px; 
     background: var(--bg-color); 
     color: var(--text-primary); 
-    font-size: 16px; /* 16px prevents iOS auto-zoom on focus */
+    font-size: 16px; 
     width: 100%;
     outline: none;
     -webkit-appearance: none; 
     appearance: none;
 }
 
-/* Date Picker Safari Grey-out / Icon Fix */
 input[type="date"] {
     font-size: 13px;
     padding: 0 4px;
@@ -154,7 +153,6 @@ input[type="date"] {
 
 input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
-    filter: invert(var(--theme-invert, 0)); /* Helps icon visibility in dark mode */
 }
 
 [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator {
@@ -183,6 +181,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .btn-danger { background: #fff5f5; color: var(--warning); border: 1px solid #ffc9c9; }
 [data-theme="dark"] .btn-danger { background: #2c1a1a; }
 
+/* Fixed General Icon-btn to not interfere with trash */
 .icon-btn { padding: 8px; width: 38px; height: 38px; flex-shrink: 0; }
 
 /* Status Indicators */
@@ -223,7 +222,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .stat-box h3 { font-size: 10px; text-transform: uppercase; opacity: 0.5; margin-bottom: 2px; }
 .stat-box p { font-weight: 800; font-size: 13px; }
 
-/* --- SPENDING LIST & TINY TRASH FIX --- */
+/* --- SPENDING LIST & FIXED TINY TRASH --- */
 .spending-list { margin-top: 15px; }
 
 .spending-item { 
@@ -244,22 +243,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     font-size: 14px;
 }
 
-/* Restored Small Trash Icon */
+/* FORCED TINY TRASH BUTTON */
 .spending-item .btn-danger.icon-btn {
-    width: 28px !important;
-    height: 28px !important;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border-radius: 6px;
+    width: 26px !important;  /* Force smaller button */
+    height: 26px !important; /* Force smaller button */
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    border-radius: 6px !important;
 }
 
+/* FORCED TINY ICON INSIDE */
+.spending-item .btn-danger.icon-btn svg,
 .spending-item .btn-danger.icon-btn i {
-    width: 14px !important;
-    height: 14px !important;
-    stroke-width: 2.5;
+    width: 13px !important;  /* Force tiny icon */
+    height: 13px !important;
+    stroke-width: 2.5px !important;
 }
 
 /* Modals */
@@ -273,7 +274,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     z-index: 1000; 
     padding: 20px; 
     backdrop-filter: blur(4px); 
-    -webkit-backdrop-filter: blur(4px); /* Safari support */
+    -webkit-backdrop-filter: blur(4px);
 }
 
 .modal-content {
@@ -290,4 +291,3 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .hidden { display: none !important; }
-.lucide-sm { width: 14px; height: 14px; stroke-width: 2.5px; }
