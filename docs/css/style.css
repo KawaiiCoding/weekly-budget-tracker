@@ -24,7 +24,7 @@
     --success: #f06292;
 }
 
-/* Combined Dark + Girl Mode Fix */
+/* Fix: Combined Dark + Girl Mode */
 [data-theme="dark"][data-style="girl"] {
     --card-bg: #2d1b1e;
     --bg-color: #1a1012;
@@ -105,10 +105,15 @@ h1 {
     cursor: pointer; 
 }
 
-/* Status Indicator Logic */
+.card-header h2, .card-header h3 { 
+    font-size: 15px; 
+    font-weight: 700; 
+}
+
+/* Status Indicator */
 .status-indicator { 
     display: flex; 
-    justify-content: space-between; 
+    justify-content: space-between;
     align-items: center; 
     width: 100%;
     margin-right: 10px;
@@ -129,6 +134,7 @@ h1 {
     font-family: monospace;
     font-size: 13px;
     font-weight: 700;
+    opacity: 0.8;
 }
 
 .dot { 
@@ -140,8 +146,30 @@ h1 {
 .dot.disconnected { background: #fd7e14; }
 .dot.connected { background: var(--success); }
 
+/* Grid System */
+.config-grid { 
+    display: grid; 
+    grid-template-columns: 1.3fr 0.7fr; 
+    gap: 8px; 
+    margin-top: 15px; 
+    width: 100%;
+    align-items: flex-end;
+}
+
+.input-group { display: flex; flex-direction: column; min-width: 0; }
+
+label { 
+    font-size: 10px; 
+    font-weight: 800; 
+    text-transform: uppercase; 
+    margin-bottom: 4px; 
+    opacity: 0.6; 
+}
+
 /* Inputs */
-input[type="text"], input[type="number"], input[type="date"] { 
+input[type="text"], 
+input[type="number"], 
+input[type="date"] { 
     height: 40px; 
     padding: 0 10px; 
     border: 1px solid var(--border); 
@@ -151,6 +179,14 @@ input[type="text"], input[type="number"], input[type="date"] {
     font-size: 16px; 
     width: 100%;
     outline: none;
+    -webkit-appearance: none; 
+    appearance: none;
+}
+
+input[type="date"] {
+    font-size: 13px;
+    padding: 0 4px;
+    text-align: center;
 }
 
 /* Buttons */
@@ -165,7 +201,8 @@ input[type="text"], input[type="number"], input[type="date"] {
     display: flex; 
     align-items: center; 
     justify-content: center;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, background-color 0.3s;
+    white-space: nowrap;
 }
 
 .btn-primary { background: var(--primary); color: white; }
@@ -175,12 +212,13 @@ input[type="text"], input[type="number"], input[type="date"] {
     background: #fff5f5; 
     color: var(--warning); 
     border: 1px solid #ffc9c9; 
+    justify-content: center;
 }
 [data-theme="dark"] .btn-danger { background: #2c1a1a; border-color: #442a2e; }
 
-.icon-btn { width: 38px; height: 38px; flex-shrink: 0; padding: 0; }
+.icon-btn { padding: 8px; width: 38px; height: 38px; flex-shrink: 0; }
 
-/* Dashboard Grid */
+/* Dashboard */
 .dashboard-grid { 
     display: grid; 
     grid-template-columns: 1fr 1fr 1fr; 
@@ -189,10 +227,11 @@ input[type="text"], input[type="number"], input[type="date"] {
     margin-top: 15px; 
 }
 
-.stat-box h3 { font-size: 10px; text-transform: uppercase; opacity: 0.5; }
+.stat-box h3 { font-size: 10px; text-transform: uppercase; opacity: 0.5; margin-bottom: 2px; }
 .stat-box p { font-weight: 800; font-size: 13px; }
 
-/* --- SPENDING LIST & TINY TRASH FIX --- */
+/* Spending List */
+.spending-list { margin-top: 15px; }
 .spending-item { 
     display: flex; 
     justify-content: space-between; 
@@ -201,29 +240,43 @@ input[type="text"], input[type="number"], input[type="date"] {
     border-bottom: 1px solid var(--border);
     gap: 10px;
 }
+.spending-item > span { 
+    flex: 1; 
+    min-width: 0; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    font-size: 14px; 
+}
 
-/* THE TRASH BUTTON FIX */
+/* FIXED: Tiny Trash Button */
 .spending-item .btn-danger.icon-btn {
     width: 28px !important; 
     height: 28px !important; 
-    min-width: 28px !important; /* Forces it to stay square */
+    min-width: 28px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     flex-shrink: 0 !important;
     border-radius: 6px !important;
+    background: #fff5f5;
 }
 
-/* THE TRASH ICON FIX */
+/* FIXED: Icon inside */
 .spending-item .btn-danger.icon-btn i,
-.spending-item .btn-danger.icon-btn svg { 
+.spending-item .btn-danger.icon-btn svg {
     width: 14px !important; 
-    height: 14px !important; 
-    stroke-width: 2.5px !important;
+    height: 14px !important;
+    stroke: var(--warning) !important;
 }
 
-/* --- MODAL FIXES --- */
+/* Collapsible */
+.collapse-icon { transition: transform 0.3s; opacity: 0.4; width: 18px; height: 18px; }
+.collapsed .collapse-icon { transform: rotate(-90deg); }
+.collapsed .collapsible-content { display: none; }
+
+/* Modals */
 .modal { 
     position: fixed; 
     inset: 0; 
@@ -232,29 +285,28 @@ input[type="text"], input[type="number"], input[type="date"] {
     align-items: center; 
     justify-content: center; 
     z-index: 1000; 
-    padding: 16px; /* Padding for mobile edges */
+    padding: 20px; 
     backdrop-filter: blur(4px); 
+    -webkit-backdrop-filter: blur(4px);
 }
 
-.modal-content { 
-    background: var(--card-bg); 
-    color: var(--text-primary); 
-    width: 100%; /* Fill available space */
-    max-width: 380px; /* But don't get too huge */
-    border-radius: var(--radius);
+/* FIXED: Modal sizing */
+.modal-content {
+    animation: modalPop 0.25s ease-out;
+    max-height: 90vh;
+    width: 95%;
+    max-width: 400px;
+    background: var(--card-bg);
+    color: var(--text-primary);
     padding: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    animation: modalPop 0.2s ease-out;
-}
-
-@keyframes modalPop {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    border-radius: var(--radius);
 }
 
 .hidden { display: none !important; }
 
-/* Collapsible Icons */
-.collapse-icon { transition: transform 0.3s; opacity: 0.4; width: 18px; }
-.collapsed .collapse-icon { transform: rotate(-90deg); }
-.collapsed .collapsible-content { display: none; }
+/* Scrollable history */
+#history-list {
+    max-height: 60vh;
+    overflow-y: auto;
+    margin-top: 15px;
+}
