@@ -1,5 +1,4 @@
 // --- Firebase Configuration ---
-// REPLACE THIS WITH YOUR FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyDVc2cc-0Q2cnx_ev2jreni9rDZVF4IQgY",
   authDomain: "weekly-budget-planner-app.firebaseapp.com",
@@ -18,8 +17,15 @@ let isOffline = !navigator.onLine;
 // Detect Connection Changes
 window.addEventListener('online', () => {
     isOffline = false;
-    if (state.syncCode) window.appSyncData(state); // Re-sync immediately
+    if (state.syncCode) {
+        // When coming back online, pull first to merge, then push
+        database.ref('sync/' + state.syncCode).once('value', snap => {
+            if(snap.exists()) mergeData(snap.val());
+            window.appSyncData(state); 
+        });
+    }
 });
+
 window.addEventListener('offline', () => {
     isOffline = true;
     updateSyncUI('disconnected', state.syncCode);
@@ -105,12 +111,25 @@ window.appSyncData = function(data) {
     });
 };
 
+// SMART MERGE: Combines local and cloud data without losing offline additions
 function mergeData(cloud) {
     if(!cloud) return;
     isSyncing = true;
+    
+    // Update basic settings
     state.startDate = cloud.startDate || state.startDate;
     state.totalBudget = cloud.totalBudget || state.totalBudget;
-    state.spendings = cloud.spendings || [];
+    
+    // Merge spendings by unique ID
+    const localIds = new Set(state.spendings.map(s => s.id));
+    const cloudSpendings = cloud.spendings || [];
+    
+    cloudSpendings.forEach(cs => {
+        if (!localIds.has(cs.id)) {
+            state.spendings.push(cs);
+        }
+    });
+
     render();
     localStorage.setItem('budgetTrackerState', JSON.stringify(state));
     isSyncing = false;
