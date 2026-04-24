@@ -12,16 +12,13 @@ let itemToDelete = null;
 function init() {
     loadLocal();
     applyTheme();
-    // Re-bind sync UI if a wallet code exists
     if(state.syncCode && window.setSyncCodeUI) {
         window.setSyncCodeUI(state.syncCode);
     }
     render();
 }
 
-/** * HELPER: Calculates the date range for a specific week 
- * based on the global Start Date.
- */
+// HELPER: Calculates the date range for a specific week based on Start Date
 function getWeekRange(startStr, weekIdx) {
     let start = new Date(startStr);
     let firstDay = new Date(start);
@@ -59,7 +56,6 @@ function saveLocal() {
 function updateSettings() {
     state.startDate = document.getElementById('start-date').value;
     state.totalBudget = parsePrice(document.getElementById('total-budget').value);
-    // Re-calculate which week each spending belongs to based on new start date
     state.spendings.forEach(s => s.weekIndex = calculateWeekIndex(s.date, state.startDate));
     saveLocal();
     render();
@@ -96,7 +92,7 @@ function render() {
         const range = getWeekRange(state.startDate, i);
         const isCurrentWeek = (todayStr >= range.min && todayStr <= range.max);
         
-        // Auto-expand current week, otherwise use user's saved preference
+        // Auto-expand current week, others respect saved collapse state
         const isCollapsed = isCurrentWeek ? '' : (state.collapsed[`week-${i}`] ? 'collapsed' : '');
         const wRem = weekBudgets[i] - weekSpends[i];
         
@@ -116,7 +112,6 @@ function render() {
                 </div>
                 <div class="collapsible-content">
                     <p style="font-size:10px; opacity:0.5; margin: 12px 0 6px 0; font-weight:800;">WEEKLY LIMIT: €${weekBudgets[i].toFixed(2)}</p>
-                    
                     <div class="config-grid">
                         <div class="input-group">
                             <label>Amount</label>
@@ -130,9 +125,7 @@ function render() {
                                 max="${range.max}">
                         </div>
                     </div>
-
                     <button class="btn btn-primary" style="width:100%; margin-top:12px" onclick="addSpending(${i})">Add Spending</button>
-                    
                     <div class="spending-list">
                         ${state.spendings.filter(s => s.weekIndex === i).sort((a,b) => b.timestamp - a.timestamp).map(s => `
                             <div class="spending-item">
@@ -148,12 +141,10 @@ function render() {
         `;
     }
 
-    // Update Main Dashboard
     const totalSpent = weekSpends.reduce((a,b) => a+b, 0);
     document.getElementById('dash-total').innerText = `€${state.totalBudget.toFixed(2)}`;
     document.getElementById('dash-spent').innerText = `€${totalSpent.toFixed(2)}`;
     document.getElementById('dash-remaining').innerText = `€${(state.totalBudget - totalSpent).toFixed(2)}`;
-    
     lucide.createIcons();
 }
 
@@ -162,19 +153,11 @@ function addSpending(idx) {
     const date = document.getElementById(`date-${idx}`).value;
     if(!amt) return;
     state.spendings.push({ id: crypto.randomUUID(), amount: amt, date, weekIndex: idx, timestamp: Date.now() });
-    saveLocal(); 
-    render();
+    saveLocal(); render();
 }
 
-function promptDelete(id) { 
-    itemToDelete = id; 
-    document.getElementById('delete-modal').classList.remove('hidden'); 
-}
-
-function closeDeleteModal() { 
-    document.getElementById('delete-modal').classList.add('hidden'); 
-}
-
+function promptDelete(id) { itemToDelete = id; document.getElementById('delete-modal').classList.remove('hidden'); }
+function closeDeleteModal() { document.getElementById('delete-modal').classList.add('hidden'); }
 document.getElementById('confirm-delete-btn').onclick = () => {
     state.spendings = state.spendings.filter(s => s.id !== itemToDelete);
     saveLocal(); render(); closeDeleteModal();
@@ -189,8 +172,7 @@ function toggleCollapse(id) {
 
 function toggleTheme() {
     state.theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    applyTheme(); 
-    saveLocal();
+    applyTheme(); saveLocal();
 }
 
 function applyTheme() {
@@ -199,6 +181,13 @@ function applyTheme() {
     const icon = document.getElementById('theme-icon');
     if(icon) icon.setAttribute('data-lucide', t === 'dark' ? 'sun' : 'moon');
     lucide.createIcons();
+}
+
+// PWA Registration
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW failed", err));
+    });
 }
 
 init();
