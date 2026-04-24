@@ -254,9 +254,21 @@ function render() {
 }
 
 document.getElementById('confirm-delete-btn').onclick = () => {
-    state.spendings = state.spendings.filter(s => s.id !== itemToDelete);
-    saveLocal(); render(); closeModal('delete-modal');
+    if (itemToDelete) {
+        state.spendings = state.spendings.filter(s => s.id !== itemToDelete);
+        saveLocal(); 
+        render(); 
+        closeModal('delete-modal');
+        itemToDelete = null; // Reset it
+    }
 };
+
+function toggleTheme() {
+    // Cycles: light -> dark -> light
+    state.theme = state.theme === 'light' ? 'dark' : 'light';
+    applyTheme();
+    saveLocal();
+}
 
 function applyTheme() {
     const t = state.theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : state.theme;
