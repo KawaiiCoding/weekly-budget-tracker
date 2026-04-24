@@ -29,20 +29,22 @@
     --border: #442a2e;
 }
 
-/* Base Reset */
+/* Base Reset & Browser Fixes */
 * { 
     box-sizing: border-box; 
     -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-primary);
     font-family: var(--font);
-    margin: 0; 
     padding: 12px;
     line-height: 1.4;
     transition: background-color 0.3s ease;
+    -webkit-font-smoothing: antialiased;
 }
 
 .container { max-width: 500px; margin: 0 auto; }
@@ -58,7 +60,6 @@ h1 {
     font-size: 20px; 
     font-weight: 800; 
     letter-spacing: -0.5px; 
-    margin: 0; 
     display: flex; 
     align-items: center; 
 }
@@ -104,7 +105,6 @@ h1 {
 .card-header h2, .card-header h3 { 
     font-size: 15px; 
     font-weight: 700; 
-    margin: 0; 
 }
 
 /* Grid System - Date column narrow */
@@ -127,7 +127,7 @@ label {
     opacity: 0.6; 
 }
 
-/* Standardized Inputs */
+/* Standardized Inputs with Safari Fixes */
 input[type="text"], 
 input[type="number"], 
 input[type="date"] { 
@@ -140,13 +140,14 @@ input[type="date"] {
     font-size: 15px; 
     width: 100%;
     outline: none;
-    -webkit-appearance: none;
+    -webkit-appearance: none; /* Fixes Safari rounded corners */
 }
 
 input[type="date"] {
     font-size: 12px;
     padding: 0 4px;
     text-align: center;
+    min-width: 0; /* Allows shrinking in flex/grid */
 }
 
 /* Buttons */
@@ -162,6 +163,7 @@ input[type="date"] {
     align-items: center; 
     justify-content: center;
     transition: opacity 0.2s, background-color 0.3s;
+    white-space: nowrap;
 }
 
 .btn:active { opacity: 0.7; }
@@ -170,13 +172,13 @@ input[type="date"] {
 .btn-danger { background: #fff5f5; color: var(--warning); border: 1px solid #ffc9c9; }
 [data-theme="dark"] .btn-danger { background: #2c1a1a; }
 
-.icon-btn { padding: 8px; width: 38px; height: 38px; }
+.icon-btn { padding: 8px; width: 38px; height: 38px; flex-shrink: 0; }
 
 /* Status & Sync Indicator */
 .status-indicator { 
     display: flex; 
     align-items: center; 
-    gap: 8px; 
+    gap: 6px; 
     font-size: 11px; 
     font-weight: 800; 
 }
@@ -208,16 +210,35 @@ input[type="date"] {
 }
 
 .stat-box h3 { font-size: 10px; text-transform: uppercase; opacity: 0.5; margin-bottom: 2px; }
-.stat-box p { font-weight: 800; font-size: 13px; margin: 0; }
+.stat-box p { font-weight: 800; font-size: 13px; }
 
-/* Spending List */
+/* --- SAFARI & MOBILE FIX: SPENDING LIST --- */
 .spending-list { margin-top: 15px; }
+
 .spending-item { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
     padding: 10px 0; 
-    border-bottom: 1px solid var(--border); 
+    border-bottom: 1px solid var(--border);
+    gap: 10px; /* Space between text and button */
+}
+
+/* Wrap price and date to prevent wrapping */
+.spending-item > span {
+    flex: 1;
+    min-width: 0; /* Safari overflow fix */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+}
+
+.spending-item .btn-danger {
+    flex-shrink: 0; /* Prevents button from being squished or wrapped */
+    width: 32px !important;
+    height: 32px !important;
+    padding: 0;
 }
 
 /* Modals */
@@ -236,6 +257,8 @@ input[type="date"] {
 .modal-content {
     animation: modalPop 0.25s ease-out;
     max-height: 90vh;
+    width: 100%;
+    max-width: 400px;
 }
 
 @keyframes modalPop {
