@@ -30,13 +30,20 @@ function togglePersona() {
 
 function applyPersona() {
     const htmlEl = document.documentElement;
-    // This triggers the CSS variables in your style.css
     htmlEl.setAttribute('data-style', state.persona);
     
+    // Dynamically change the mobile browser header color
+    const themeColor = state.persona === 'girl' ? '#ff85a2' : '#228be6';
+    let metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+        metaTheme.setAttribute('content', themeColor);
+    }
+
+    // Update icons...
     const icon = document.getElementById('persona-icon');
     if (icon) {
-        // Change icon to heart for girl mode, user for dude mode
-        icon.setAttribute('data-lucide', state.persona === 'girl' ? 'sparkles' : 'user');
+        const iconName = state.persona === 'girl' ? 'sparkles' : 'user-round';
+        icon.setAttribute('data-lucide', iconName);
     }
     lucide.createIcons();
 }
